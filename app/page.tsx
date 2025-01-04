@@ -1,12 +1,12 @@
-import { Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { UserButton } from "@clerk/nextjs";
 
 export default function Home() {
   return (
     <div>
-      <Button>
-        <Mail /> Login with Email
-      </Button>
+      <h1>Welcome to the App</h1>
+      <UserButton />
     </div>
   );
 }
