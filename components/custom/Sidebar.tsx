@@ -20,19 +20,19 @@ const Sidebar = () => {
       id: 2,
       name: "Create",
       icon: Clapperboard,
-      path: "/create",
+      path: "/dashboard/create",
     },
     {
       id: 3,
       name: "Upgrade",
       icon: SquarePlus,
-      path: "/upgrade",
+      path: "/dashboard/upgrade",
     },
     {
       id: 4,
       name: "Account",
       icon: SquareUser,
-      path: "/account",
+      path: "/dashboard/account",
     },
   ];
   const urlPathName = usePathname();

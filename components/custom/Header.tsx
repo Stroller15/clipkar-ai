@@ -13,7 +13,7 @@ const Header = () => {
           width={30}
           height={30}
         />
-        <h1 className="font-bold text-xl">ClipKar</h1>
+        <h1 className="font-bold text-xl text-primary">ClipKar</h1>
       </div>
       <div className="flex items-center gap-3">
         <Button>Dashboard</Button>
