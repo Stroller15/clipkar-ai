@@ -1,22 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fira_Code} from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Provider from "./provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const firaCode = Fira_Code({
+  subsets: ['latin']
+})
 
 export const metadata: Metadata = {
   title: "ClipKar",
   description: "AI shorts video generator web app",
+  icons: {
+    icon: "/logo_without_name.png",
+  },
 };
 
 export default function RootLayout({
@@ -27,9 +24,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+        <body className={firaCode.className}>
           <Provider>{children}</Provider>
         </body>
       </html>

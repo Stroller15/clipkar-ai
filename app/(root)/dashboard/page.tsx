@@ -1,9 +1,10 @@
+
 import React from 'react'
 
 const DashboardPage = () => {
   return (
-    <div>
-        dahsboard
+    <div className='flex flex-col' >
+        <h1>welcome in my world</h1>
     </div>
   )
 }
