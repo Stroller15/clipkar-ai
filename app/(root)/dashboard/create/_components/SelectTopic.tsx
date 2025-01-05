@@ -37,8 +37,8 @@ const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
 
   return (
     <div>
-      <h2 className="font-bold text-primary">Content</h2>
-      <p className="font-xl font-gray"> Select topic of your short video! </p>
+      <h2 className="font-bold text-primary">Content Type</h2>
+      <p className="font-xl font-gray"> Select content type of your short video! </p>
       <Select onValueChange={handleSelect}>
         <SelectTrigger className="w-full p-6 mt-2 text-lg border-gray-400 rounded-lg">
           <SelectValue placeholder="Content Type" />
