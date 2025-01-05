@@ -1,7 +1,10 @@
 import { useState } from "react";
 import Image from "next/image";
 
-const SelectStyle = () => {
+interface SelectStyleProps {
+  onUserSelect: (type: string, value: string) => void;
+}
+const SelectStyle: React.FC<SelectStyleProps> = ({ onUserSelect }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const selectOptions = [
     {
@@ -36,12 +39,19 @@ const SelectStyle = () => {
       <p className="font-xl font-gray">
         Select content style of your short video!
       </p>
-      <div className="grid grid-col-2 md:grid-cols-6 gap-4 mt-4">
+      <div className="grid grid-col-2 md:grid-cols-5 lg:grid-cols-6 gap-4 mt-4">
         {selectOptions.map((item, index) => (
           <div
-          onClick={() => setSelectedOption(item.name)}
+            onClick={() => {
+              setSelectedOption(item.name);
+              onUserSelect("selectedStyle", item.name);
+            }}
             key={index}
-            className={`relative hover:scale-105 transition-all cursor-pointer ${selectedOption === item.name ? 'border-4 border-primary rounded-xl' : ''}`}
+            className={`relative hover:scale-105 transition-all cursor-pointer ${
+              selectedOption === item.name
+                ? "border-4 border-primary rounded-xl"
+                : ""
+            }`}
           >
             <Image
               alt={item.name}

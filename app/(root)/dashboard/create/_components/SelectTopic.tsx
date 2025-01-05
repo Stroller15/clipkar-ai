@@ -19,7 +19,7 @@ const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
   const handleSelect = (value: string) => {
     setSelectedTopic(value);
     if(value !== "Custom Prompt") {
-      onUserSelect('topic', value);
+      onUserSelect('selectedTopic', value);
     }
     
   };

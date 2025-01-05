@@ -8,6 +8,7 @@ const CreatePage = () => {
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
     const newFormData = { ...formData, [fieldName]: fieldValue };
+    console.log(newFormData);
     setFormData(newFormData);
   };
   
@@ -16,12 +17,12 @@ const CreatePage = () => {
       <h2 className="font-bold text-center text-primary md:text-4xl">
         Create New Short Video{" "}
       </h2>
-      <div className='mt-5 shadow-md p-5 md:mt-10 md:shadow-md md:p-10'>
+      <div className="mt-5 shadow-md p-5 md:mt-10 md:shadow-md md:p-10">
         {/* select topic */}
-        <SelectTopic onUserSelect={onHandleInputChange}/>
-        
+        <SelectTopic onUserSelect={onHandleInputChange} />
+
         {/* select style */}
-        <SelectStyle />
+        <SelectStyle onUserSelect={onHandleInputChange} />
         {/* duration */}
 
         {/* create button */}
