@@ -34,8 +34,8 @@ const SelectStyle: React.FC<SelectStyleProps> = ({ onUserSelect }) => {
   ];
 
   return (
-    <div className="mt-3">
-      <h2 className="font-bold text-primary">Content Style</h2>
+    <div className="mt-5">
+      <h2 className="font-bold text-primary">2 - Content Style</h2>
       <p className="font-xl font-gray">
         Select content style of your short video!
       </p>

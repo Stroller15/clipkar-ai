@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Select,
   SelectContent,
@@ -18,10 +18,9 @@ const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
 
   const handleSelect = (value: string) => {
     setSelectedTopic(value);
-    if(value !== "Custom Prompt") {
-      onUserSelect('selectedTopic', value);
+    if (value !== "Custom Prompt") {
+      onUserSelect("selectedTopic", value);
     }
-    
   };
 
   const contentOption: string[] = [
@@ -37,8 +36,11 @@ const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
 
   return (
     <div>
-      <h2 className="font-bold text-primary">Content Type</h2>
-      <p className="font-xl font-gray"> Select content type of your short video! </p>
+      <h2 className="font-bold text-primary">1 - Content Type</h2>
+      <p className="font-xl font-gray">
+        {" "}
+        Select content type of your short video!{" "}
+      </p>
       <Select onValueChange={handleSelect}>
         <SelectTrigger className="w-full p-6 mt-2 text-lg border-gray-400 rounded-lg">
           <SelectValue placeholder="Content Type" />
@@ -54,7 +56,7 @@ const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
       {selectedTopic === "Custom Prompt" && (
         <div className="mt-4">
           <Textarea
-            onChange={(e) => onUserSelect('topic', e.target.value)}
+            onChange={(e) => onUserSelect("topic", e.target.value)}
             required
             placeholder="Enter your custom prompt here..."
             className="w-full min-h-32 p-4 border-gray-400 rounded-lg"
