@@ -5,6 +5,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 
 const DashboardPage = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [videoList, setVideoList] = useState([]);
   return (
     <div className="">
