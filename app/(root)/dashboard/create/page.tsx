@@ -30,7 +30,7 @@ const CreatePage = () => {
 
         {/* create button */}
         <div className="mt-5 md:mt-10">
-          <Button className="w-full text-white p-4 rounded-lg">
+          <Button className="w-full text-white p-6 rounded-lg">
             Create Short Video
           </Button>
         </div>
