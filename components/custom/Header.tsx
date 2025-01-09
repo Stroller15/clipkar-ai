@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { Button } from "../ui/button";
@@ -17,7 +16,7 @@ const Header = () => {
         />
         <h1 className="font-bold text-xl text-primary">ClipKar</h1>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-5 mr-5">
         <Button>Dashboard</Button>
         <UserButton />
       </div>

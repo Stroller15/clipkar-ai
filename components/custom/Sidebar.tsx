@@ -39,7 +39,7 @@ const Sidebar = () => {
   const router = useRouter();
 
   return (
-    <div className="h-screen w-64 text-white bg-primary shadow-md p-5">
+    <div className="min-h-screen w-64 text-white bg-primary shadow-md p-5">
       <div className="grid gap-3">
         {menuOptions.map((item, index) => (
           <div
