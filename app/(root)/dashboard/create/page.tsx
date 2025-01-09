@@ -4,14 +4,56 @@ import SelectTopic from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
 import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
+import indentString from "indent-string";
+import axios from "axios";
+
+type FormData = {
+  selectedTopic?: string;
+  selectedStyle?: string;
+  selectedDuration?: string;
+};
 
 const CreatePage = () => {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<FormData>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [videoScript, setVideoScript] = useState([]);
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
-    const newFormData = { ...formData, [fieldName]: fieldValue };
-    console.log(newFormData);
-    setFormData(newFormData);
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: fieldValue,
+    }));
+  };
+  console.log(formData);
+
+  const prompt = indentString(
+    `write a script to generate ${
+      formData.selectedDuration || "30 Seconds"
+    } video topic: interesting ${
+      formData.selectedTopic || "Story"
+    } along with AI image prompt in ${
+      formData.selectedStyle || "Realistic"
+    } style for each scene and give me result in JSON format with imagePrompt and contentText and field, No plain text`,
+    2
+  );
+
+  const onCreateVideoClickHandler = () => {
+    getVideoScript();
+  };
+
+  const getVideoScript = async () => {
+    setIsLoading(true);
+    try {
+      const result = await axios.post("/api/get-video-script", {
+        prompt,
+      });
+      setVideoScript(result.data.result);
+      console.log(videoScript);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,8 +72,12 @@ const CreatePage = () => {
 
         {/* create button */}
         <div className="mt-5 md:mt-10">
-          <Button className="w-full text-white p-6 rounded-lg">
-            Create Short Video
+          <Button
+            onClick={onCreateVideoClickHandler}
+            className="w-full text-white p-6 rounded-lg"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating Video..." : "Create Short Video"}
           </Button>
         </div>
       </div>

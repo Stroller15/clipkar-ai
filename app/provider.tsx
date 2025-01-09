@@ -1,6 +1,7 @@
 "use client";
 import { useUser } from "@clerk/nextjs";
 import React, { useEffect } from "react";
+import axios from "axios";
 
 const Provider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
@@ -8,24 +9,21 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      // Call the API to store the user
-      fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      axios
+        .post("/api/users", {
           email: user.primaryEmailAddress?.emailAddress,
           name: user.fullName,
           imageUrl: user.imageUrl,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => console.log(data))
-        .catch((error) => console.error(error));
+        })
+        .then((response) => {
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     }
   }, [user]);
-  
+
   return <div>{children}</div>;
 };
 

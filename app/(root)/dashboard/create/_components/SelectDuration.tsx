@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -12,26 +12,46 @@ interface SelectDurationProps {
 }
 
 const SelectDuration: React.FC<SelectDurationProps> = ({ onUserSelect }) => {
+  const [isTouched, setIsTouched] = useState(false);
+  const [value, setValue] = useState("");
+
+  const handleValueChange = (newValue: string) => {
+    setValue(newValue);
+    setIsTouched(true);
+    onUserSelect("selectedDuration", newValue);
+  };
+
   return (
     <div className="mt-5">
-      <h2 className="font-bold text-primary">3 - Content Duration</h2>
-      <p className="font-xl font-gray">
-        {" "}
-        Select the duration of your short video!{" "}
+      <div className="flex items-baseline gap-2">
+        <h2 className="font-bold text-primary">3 - Content Duration</h2>
+        <span className="text-red-500">*</span>
+      </div>
+      <p className="font-xl text-gray-500">
+        Select the duration of your short video!
       </p>
-      <Select
-        onValueChange={(value) => onUserSelect("selectedDuration", value)}
-      >
-        <SelectTrigger className="w-full p-6 mt-2 text-lg border-gray-400 rounded-lg">
-          <SelectValue placeholder="Duration" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="15 Seconds">15 Seconds</SelectItem>
-          <SelectItem value="30 Seconds">30 Seconds</SelectItem>
-          <SelectItem value="45 Seconds">45 Seconds</SelectItem>
-          <SelectItem value="60 Seconds">60 Seconds</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="relative">
+        <Select onValueChange={handleValueChange} required>
+          <SelectTrigger
+            className={`w-full p-6 mt-2 text-lg rounded-lg ${
+              isTouched && !value
+                ? "border-red-500 border-2"
+                : "border-gray-400"
+            }`}
+          >
+            <SelectValue placeholder="Select duration" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="15 Seconds">15 Seconds</SelectItem>
+            <SelectItem value="30 Seconds">30 Seconds</SelectItem>
+            <SelectItem value="45 Seconds">45 Seconds</SelectItem>
+            <SelectItem value="60 Seconds">60 Seconds</SelectItem>
+          </SelectContent>
+        </Select>
+        {isTouched && !value && (
+          <p className="mt-2 text-sm text-red-500">Please select a duration</p>
+        )}
+      </div>
     </div>
   );
 };
