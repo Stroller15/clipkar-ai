@@ -39,16 +39,16 @@ const Sidebar = () => {
   const router = useRouter();
 
   return (
-    <div className="h-screen w-64 shadow-md p-5">
+    <div className="h-screen w-64 text-white bg-primary shadow-md p-5">
       <div className="grid gap-3">
         {menuOptions.map((item, index) => (
           <div
             key={index}
             onClick={() => router.push(item.path)}
-            className={`flex items-center gap-3 p-3  cursor-pointer rounded-md ${
+            className={`flex items-center gap-3 p-3 cursor-pointer rounded-md ${
               urlPathName === item.path
-                ? "bg-primary text-white"
-                : "hover:bg-primary hover:text-white"
+                ? "bg-white text-black"
+                : "hover:bg-white hover:text-black"
             }`}
           >
             <item.icon className="h-6 w-6" />
@@ -58,6 +58,7 @@ const Sidebar = () => {
       </div>
     </div>
   );
+
 };
 
 export default Sidebar;
