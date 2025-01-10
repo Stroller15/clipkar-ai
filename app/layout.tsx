@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Fira_Code} from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Provider from "./provider";
 
-const firaCode = Fira_Code({
-  subsets: ['latin']
-})
+const figTree = Figtree({
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "ClipKar",
@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={firaCode.className}>
+        <body className={figTree.className}>
           <Provider>{children}</Provider>
         </body>
       </html>

@@ -45,7 +45,7 @@ const SelectStyle: React.FC<SelectStyleProps> = ({ onUserSelect }) => {
   return (
     <div className="mt-5">
       <div className="flex items-baseline gap-2">
-        <h2 className="font-bold text-primary">2 - Content Style</h2>
+        <h2 className="font-bold text-xl text-primary">2 - Content Style</h2>
         <span className="text-red-500">*</span>
       </div>
       <p className="font-xl text-gray-500">

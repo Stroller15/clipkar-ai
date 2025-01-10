@@ -24,7 +24,7 @@ const SelectDuration: React.FC<SelectDurationProps> = ({ onUserSelect }) => {
   return (
     <div className="mt-5">
       <div className="flex items-baseline gap-2">
-        <h2 className="font-bold text-primary">3 - Content Duration</h2>
+        <h2 className="font-bold text-xl text-primary">3 - Content Duration</h2>
         <span className="text-red-500">*</span>
       </div>
       <p className="font-xl text-gray-500">
