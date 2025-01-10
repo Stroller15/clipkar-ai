@@ -8,7 +8,7 @@ const DashboardPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [videoList, setVideoList] = useState([]);
   return (
-    <div className="">
+    <div className="px-5">
       <div className="p-5 flex items-center justify-between">
         <h1 className="font-bold text-primary text-2xl">Dashboard</h1>
         <Link href={"/dashboard/create"}>

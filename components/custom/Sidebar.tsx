@@ -1,10 +1,12 @@
-"use client"
+"use client";
 import {
   Clapperboard,
   LayoutDashboard,
   SquarePlus,
   SquareUser,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
@@ -41,6 +43,14 @@ const Sidebar = () => {
   return (
     <div className="min-h-screen w-64 text-white bg-primary shadow-md p-5">
       <div className="grid gap-3">
+        <div className="flex items-center gap-1 mb-5">
+          <Link href="/">
+            <div className="flex items-center gap-1 cursor-pointer">
+              <Image src={"/logo.png"} alt="logo" width={40} height={40} />
+              <h1 className="font-bold text-2xl text-bg">ClipKar</h1>
+            </div>
+          </Link>
+        </div>
         {menuOptions.map((item, index) => (
           <div
             key={index}
@@ -58,7 +68,6 @@ const Sidebar = () => {
       </div>
     </div>
   );
-
 };
 
 export default Sidebar;

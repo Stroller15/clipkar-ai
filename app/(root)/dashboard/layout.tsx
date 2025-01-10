@@ -5,7 +5,7 @@ import React from 'react'
 const dashboardLayout = ({children}: {children: React.ReactNode}) => {
   return (
     <div>
-      <div className="hidden md:block h-screen fixed mt-[65px] w-64">
+      <div className="hidden md:block h-screen fixed  w-64">
         <Sidebar />
       </div>
       <div>
