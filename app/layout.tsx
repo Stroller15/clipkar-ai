@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "ClipKar",
   description: "AI shorts video generator web app",
   icons: {
-    icon: "/logo_without_name.png",
+    icon: "/favicon.png",
   },
 };
 

@@ -33,16 +33,16 @@ function App() {
             <div className="inline-block">
               <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-[#2147ee]/10 to-[#f04cf1]/10 text-[#2147ee] mb-6">
                 <Sparkles className="w-4 h-4 mr-2" />
-                AI-Powered Video Creation
+                AI-Powered Shorts Video Creation
               </span>
             </div>
             <h1 className="text-6xl md:text-7xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#2147ee] via-[#d486f6] to-[#f04cf1] leading-tight">
               Transform Your Ideas
               <br />
-              Into Stunning Videos
+              Into Stunning Shorts Videos
             </h1>
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-              Create professional videos in minutes with our advanced AI
+              Create professional shorts videos in minutes with our advanced AI
               technology. No editing experience needed.
             </p>
             <div className="flex items-center justify-center gap-4">
@@ -87,21 +87,21 @@ function App() {
             {[
               {
                 icon: Layout,
-                title: "Smart Templates",
+                title: "Content Type",
                 description:
-                  "Choose from AI-curated templates tailored to your content type and goals.",
+                  "Pick the genre or category that aligns with your vision and purpose",
               },
               {
                 icon: Wand2,
-                title: "Magic Editor",
+                title: "Content Style",
                 description:
-                  "Our AI automatically enhances your video with perfect transitions and effects.",
+                  "Define the visual tone and artistic approach to match your audience's expectations",
               },
               {
                 icon: Clock,
-                title: "Instant Creation",
+                title: "Content Duration",
                 description:
-                  "Generate professional videos in minutes, not hours. Save time and resources.",
+                  "Set the appropriate video length to effectively convey your message",
               },
             ].map((feature, index) => (
               <div
