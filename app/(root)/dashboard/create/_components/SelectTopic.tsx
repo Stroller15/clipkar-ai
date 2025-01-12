@@ -50,7 +50,7 @@ const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
   return (
     <div>
       <div className="flex items-baseline gap-2">
-        <h2 className="font-bold text-xl text-primary">1 - Content Type</h2>
+        <h2 className="font-bold text-xl text-primary">Content Type</h2>
         <span className="text-red-500">*</span>
       </div>
       <p className="font-xl text-gray-500">
