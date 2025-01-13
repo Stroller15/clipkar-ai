@@ -9,12 +9,6 @@ export default {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
 
-  //   --text: #01040c;
-  // --background: #eef3fe;
-  // --primary: #2147ee;
-  // --secondary: #d486f6;
-  // --accent: #f04cf1;
-
   theme: {
     extend: {
       colors: {
