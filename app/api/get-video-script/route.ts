@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
     try{
         const {prompt} = await req.json();
-        console.log("raw prompt", prompt);
 
         const result = await chatSession.sendMessage(prompt);
         

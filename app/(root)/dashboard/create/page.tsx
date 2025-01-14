@@ -24,7 +24,6 @@ const CreatePage = () => {
       [fieldName]: fieldValue,
     }));
   };
-  console.log(formData);
 
   const prompt = indentString(
     `write a script to generate ${
@@ -47,8 +46,7 @@ const CreatePage = () => {
       const result = await axios.post("/api/get-video-script", {
         prompt,
       });
-      setVideoScript(result.data.result);
-      console.log(videoScript);
+      setVideoScript(result?.data?.result?.scenes);
     } catch (error) {
       console.log(error);
     } finally {
