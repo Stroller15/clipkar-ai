@@ -1,4 +1,5 @@
-"use client"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
 import React, { useState } from "react";
 import SelectTopic from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
@@ -22,14 +23,16 @@ interface StoryElement {
 
 type StoryElements = StoryElement[];
 
-const LoadingState = ({ type }: { type: "script" | "audio" }) => {
+const LoadingState = ({ type }: { type: "script" | "audio" | "caption" }) => {
   return (
     <div className="flex items-center justify-center gap-2">
       <Loader2 className="h-4 w-4 animate-spin" />
       <span>
         {type === "script"
           ? "Generating video script..."
-          : "Generating audio..."}
+          : type === "audio"
+          ? "Generating audio script..."
+          : "Generating caption..."}
       </span>
     </div>
   );
@@ -39,7 +42,10 @@ const CreatePage = () => {
   const [formData, setFormData] = useState<FormData>({});
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [videoScript, setVideoScript] = useState<StoryElements>([]);
+  const [audioFileURL, setAudioFileURL] = useState("");
+  const [captionFileURL, setCaptionFileURL] = useState("");
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
     setFormData((prev) => ({
@@ -59,28 +65,7 @@ const CreatePage = () => {
     2
   );
 
-  const generateAudioFile = async (script: StoryElements) => {
-    let scriptText = "";
-    const id = uuidv4();
-
-    script?.forEach((item) => {
-      scriptText += item.contentText + " ";
-    });
-
-    try {
-      setIsGeneratingAudio(true);
-      const res = await axios.post("/api/generate-audio", {
-        text: scriptText,
-        id,
-      });
-      console.log(res.data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsGeneratingAudio(false);
-    }
-  };
-
+  // generate video script
   const getVideoScript = async () => {
     setIsGeneratingScript(true);
     try {
@@ -102,7 +87,46 @@ const CreatePage = () => {
     getVideoScript();
   };
 
-  const isLoading = isGeneratingScript || isGeneratingAudio;
+  // generate audio file
+  const generateAudioFile = async (script: StoryElements) => {
+    let scriptText = "";
+    const id = uuidv4();
+
+    script?.forEach((item) => {
+      scriptText += item.contentText + " ";
+    });
+
+    try {
+      setIsGeneratingAudio(true);
+      const res = await axios.post("/api/generate-audio", {
+        text: scriptText,
+        id,
+      });
+      setAudioFileURL(res.data.result);
+      generateCaptionFile(res.data.result);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  };
+// generate audio caption
+  const generateCaptionFile = async (audioFileURL: string) => {
+    try {
+      setIsGeneratingCaption(true);
+      const res = await axios.post("/api/generate-caption", {
+        audioFileURL,
+      });
+      setCaptionFileURL(res.data.result)
+      console.log(res.data.result);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsGeneratingCaption(false);
+    }
+  };
+
+  const isLoading = isGeneratingScript || isGeneratingAudio || isGeneratingCaption;
 
   return (
     <div className="p-6 md:p-10">
@@ -124,6 +148,8 @@ const CreatePage = () => {
               <LoadingState type="script" />
             ) : isGeneratingAudio ? (
               <LoadingState type="audio" />
+            ) : isGeneratingCaption ? (
+              <LoadingState type="caption" />
             ) : (
               "Create Short Video"
             )}
