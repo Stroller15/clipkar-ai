@@ -1,11 +1,13 @@
-"use client";
+"use client"
 import React, { useState } from "react";
 import SelectTopic from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
 import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import indentString from "indent-string";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 
 type FormData = {
   selectedTopic?: string;
@@ -13,10 +15,31 @@ type FormData = {
   selectedDuration?: string;
 };
 
+interface StoryElement {
+  imagePrompt: string;
+  contentText: string;
+}
+
+type StoryElements = StoryElement[];
+
+const LoadingState = ({ type }: { type: "script" | "audio" }) => {
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      <span>
+        {type === "script"
+          ? "Generating video script..."
+          : "Generating audio..."}
+      </span>
+    </div>
+  );
+};
+
 const CreatePage = () => {
   const [formData, setFormData] = useState<FormData>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [videoScript, setVideoScript] = useState([]);
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [videoScript, setVideoScript] = useState<StoryElements>([]);
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
     setFormData((prev) => ({
@@ -36,46 +59,74 @@ const CreatePage = () => {
     2
   );
 
+  const generateAudioFile = async (script: StoryElements) => {
+    let scriptText = "";
+    const id = uuidv4();
+
+    script?.forEach((item) => {
+      scriptText += item.contentText + " ";
+    });
+
+    try {
+      setIsGeneratingAudio(true);
+      const res = await axios.post("/api/generate-audio", {
+        text: scriptText,
+        id,
+      });
+      console.log(res.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  };
+
+  const getVideoScript = async () => {
+    setIsGeneratingScript(true);
+    try {
+      const result = await axios.post("/api/generate-video-image-script", {
+        prompt,
+      });
+      const newScript = result?.data?.result?.scenes;
+      console.log(videoScript);
+      setVideoScript(newScript);
+      generateAudioFile(newScript);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsGeneratingScript(false);
+    }
+  };
+
   const onCreateVideoClickHandler = () => {
     getVideoScript();
   };
 
-  const getVideoScript = async () => {
-    setIsLoading(true);
-    try {
-      const result = await axios.post("/api/get-video-script", {
-        prompt,
-      });
-      setVideoScript(result?.data?.result?.scenes);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const isLoading = isGeneratingScript || isGeneratingAudio;
 
   return (
     <div className="p-6 md:p-10">
       <h2 className="font-bold text-center text-primary md:text-4xl">
-        Create New Short Video{" "}
+        Create New Short Video
       </h2>
       <div className="mt-3 shadow-md p-5 md:mt-5 md:shadow-md md:p-10">
-        {/* select topic */}
         <SelectTopic onUserSelect={onHandleInputChange} />
-
-        {/* select style */}
         <SelectStyle onUserSelect={onHandleInputChange} />
-        {/* duration */}
         <SelectDuration onUserSelect={onHandleInputChange} />
 
-        {/* create button */}
         <div className="mt-5 md:mt-10">
           <Button
             onClick={onCreateVideoClickHandler}
             className="w-full text-white p-6 rounded-lg"
             disabled={isLoading}
           >
-            {isLoading ? "Creating Video..." : "Create Short Video"}
+            {isGeneratingScript ? (
+              <LoadingState type="script" />
+            ) : isGeneratingAudio ? (
+              <LoadingState type="audio" />
+            ) : (
+              "Create Short Video"
+            )}
           </Button>
         </div>
       </div>
