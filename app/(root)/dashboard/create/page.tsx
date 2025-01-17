@@ -92,8 +92,7 @@ const CreatePage = () => {
   };
 
   const onCreateVideoClickHandler = () => {
-    // getVideoScript();
-    generateImage();
+    getVideoScript();
   };
 
   // generate audio file
@@ -136,21 +135,12 @@ const CreatePage = () => {
     }
   };
 
-  const mockVideoScript: StoryElements = [
-    {
-      imagePrompt:
-        "A serene mountain landscape with a clear blue sky and a flowing river.",
-      contentText:
-        "The camera pans over a peaceful mountain landscape, showcasing the beauty of nature.",
-    },
-  ];
-
   // generate ai image
   const generateImage = async () => {
     setIsGeneratingImage(true);
     const images = [];
     try {
-      for (const item of mockVideoScript) {
+      for (const item of videoScript) {
         const res = await axios.post("/api/generate-image", {
           prompt: item?.imagePrompt,
         });
