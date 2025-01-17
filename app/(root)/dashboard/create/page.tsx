@@ -23,7 +23,11 @@ interface StoryElement {
 
 type StoryElements = StoryElement[];
 
-const LoadingState = ({ type }: { type: "script" | "audio" | "caption" }) => {
+const LoadingState = ({
+  type,
+}: {
+  type: "script" | "audio" | "caption" | "image";
+}) => {
   return (
     <div className="flex items-center justify-center gap-2">
       <Loader2 className="h-4 w-4 animate-spin" />
@@ -31,8 +35,10 @@ const LoadingState = ({ type }: { type: "script" | "audio" | "caption" }) => {
         {type === "script"
           ? "Generating video script..."
           : type === "audio"
-          ? "Generating audio script..."
-          : "Generating caption..."}
+          ? "Generating audio..."
+          : type === "caption"
+          ? "Generating caption..."
+          : "Generating images..."}
       </span>
     </div>
   );
@@ -43,9 +49,11 @@ const CreatePage = () => {
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [videoScript, setVideoScript] = useState<StoryElements>([]);
   const [audioFileURL, setAudioFileURL] = useState("");
   const [captionFileURL, setCaptionFileURL] = useState("");
+  const [imageList, setImageList] = useState<string[]>([]);
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
     setFormData((prev) => ({
@@ -65,7 +73,7 @@ const CreatePage = () => {
     2
   );
 
-  // generate video script
+  // generate video and image script
   const getVideoScript = async () => {
     setIsGeneratingScript(true);
     try {
@@ -84,7 +92,8 @@ const CreatePage = () => {
   };
 
   const onCreateVideoClickHandler = () => {
-    getVideoScript();
+    // getVideoScript();
+    generateImage();
   };
 
   // generate audio file
@@ -110,15 +119,16 @@ const CreatePage = () => {
       setIsGeneratingAudio(false);
     }
   };
-// generate audio caption
+
+  // generate audio caption
   const generateCaptionFile = async (audioFileURL: string) => {
     try {
       setIsGeneratingCaption(true);
       const res = await axios.post("/api/generate-caption", {
         audioFileURL,
       });
-      setCaptionFileURL(res.data.result)
-      console.log(res.data.result);
+      setCaptionFileURL(res.data.result);
+      generateImage();
     } catch (err) {
       console.log(err);
     } finally {
@@ -126,7 +136,39 @@ const CreatePage = () => {
     }
   };
 
-  const isLoading = isGeneratingScript || isGeneratingAudio || isGeneratingCaption;
+  const mockVideoScript: StoryElements = [
+    {
+      imagePrompt:
+        "A serene mountain landscape with a clear blue sky and a flowing river.",
+      contentText:
+        "The camera pans over a peaceful mountain landscape, showcasing the beauty of nature.",
+    },
+  ];
+
+  // generate ai image
+  const generateImage = async () => {
+    setIsGeneratingImage(true);
+    const images = [];
+    try {
+      for (const item of mockVideoScript) {
+        const res = await axios.post("/api/generate-image", {
+          prompt: item?.imagePrompt,
+        });
+        images.push(res.data.result);
+      }
+      setImageList(images);
+    } catch (error) {
+      console.error("Error generating images:", error);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const isLoading =
+    isGeneratingScript ||
+    isGeneratingAudio ||
+    isGeneratingCaption ||
+    isGeneratingImage;
 
   return (
     <div className="p-6 md:p-10">
@@ -150,6 +192,8 @@ const CreatePage = () => {
               <LoadingState type="audio" />
             ) : isGeneratingCaption ? (
               <LoadingState type="caption" />
+            ) : isGeneratingImage ? (
+              <LoadingState type="image" />
             ) : (
               "Create Short Video"
             )}
