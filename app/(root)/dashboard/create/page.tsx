@@ -5,44 +5,11 @@ import SelectTopic from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
 import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import indentString from "indent-string";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-
-type FormData = {
-  selectedTopic?: string;
-  selectedStyle?: string;
-  selectedDuration?: string;
-};
-
-interface StoryElement {
-  imagePrompt: string;
-  contentText: string;
-}
-
-type StoryElements = StoryElement[];
-
-const LoadingState = ({
-  type,
-}: {
-  type: "script" | "audio" | "caption" | "image";
-}) => {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <Loader2 className="h-4 w-4 animate-spin" />
-      <span>
-        {type === "script"
-          ? "Generating video script..."
-          : type === "audio"
-          ? "Generating audio..."
-          : type === "caption"
-          ? "Generating caption..."
-          : "Generating images..."}
-      </span>
-    </div>
-  );
-};
+import { LoadingState } from "@/components/custom/Loading";
+import { FormData, StoryElements } from "@/types";
 
 const CreatePage = () => {
   const [formData, setFormData] = useState<FormData>({});
@@ -61,6 +28,12 @@ const CreatePage = () => {
       [fieldName]: fieldValue,
     }));
   };
+
+  const isLoading =
+    isGeneratingScript ||
+    isGeneratingAudio ||
+    isGeneratingCaption ||
+    isGeneratingImage;
 
   const prompt = indentString(
     `write a script to generate ${
@@ -153,12 +126,6 @@ const CreatePage = () => {
       setIsGeneratingImage(false);
     }
   };
-
-  const isLoading =
-    isGeneratingScript ||
-    isGeneratingAudio ||
-    isGeneratingCaption ||
-    isGeneratingImage;
 
   return (
     <div className="p-6 md:p-10">
