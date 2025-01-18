@@ -1,9 +1,17 @@
+"use client"
+
 import Header from '@/components/custom/Header'
 import Sidebar from '@/components/custom/Sidebar'
-import React from 'react'
+import { useState } from 'react'
+import { videoDataContext } from '../../_context/videoDataContext';
+import { VideoData } from '@/types';
 
-const dashboardLayout = ({children}: {children: React.ReactNode}) => {
+
+const DashboardLayout = ({children}: {children: React.ReactNode}) => {
+  const [videoData, setVideoData] = useState<VideoData>({})
+  
   return (
+    <videoDataContext.Provider value={{videoData, setVideoData}} >
     <div>
       <div className="hidden md:block h-screen fixed  w-64">
         <Sidebar />
@@ -13,7 +21,8 @@ const dashboardLayout = ({children}: {children: React.ReactNode}) => {
         <div className='md:ml-64'>{children}</div>
       </div>
     </div>
+    </videoDataContext.Provider>
   );
 }
 
-export default dashboardLayout
+export default DashboardLayout

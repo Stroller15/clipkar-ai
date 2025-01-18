@@ -10,3 +10,10 @@ export interface StoryElement {
 }
 
 export type StoryElements = StoryElement[];
+
+export interface VideoData {
+  videoScript?: StoryElements; 
+  audioFileURL?: string;       
+  captionFile?: string[];       
+  imageList?: string[];        
+}

@@ -1,6 +1,7 @@
 import textToSpeech, { protos } from "@google-cloud/text-to-speech";
 import { storage } from "@/config/Firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { NextResponse } from "next/server";
 
 const client = new textToSpeech.TextToSpeechClient({
   apiKey: process.env.TTS_API_KEY,
@@ -39,9 +40,7 @@ export async function POST(req: Request) {
     await uploadBytes(storageRef, audioBuffer, { contentType: "audio/mp3" });
     const downloadURL = await getDownloadURL(storageRef);
 
-    return new Response(JSON.stringify({ success: true, downloadURL }), {
-      status: 200,
-    });
+    return NextResponse.json({ success: true, result: downloadURL });
 
   } catch (error) {
     console.error("Error generating audio:", error);
