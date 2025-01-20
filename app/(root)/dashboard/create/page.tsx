@@ -148,10 +148,6 @@ const CreatePage = () => {
     }
   };
 
-  useEffect(() => {
-    console.log(videoData)
-  }, [videoData])
-
   return (
     <div className="p-6 md:p-10">
       <h2 className="font-bold text-center text-primary md:text-4xl">
