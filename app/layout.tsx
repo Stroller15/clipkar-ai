@@ -9,7 +9,7 @@ const figTree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "ClipKar",
+  title: "ClipKar | Generate AI Powered Shorts Videos",
   description: "AI shorts video generator web app",
   icons: {
     icon: "/favicon.png",
