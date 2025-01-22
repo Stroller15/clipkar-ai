@@ -28,7 +28,7 @@ const DashboardPage = () => {
               You don&apos;t have any shorts video
             </h1>
             <Link href={"/dashboard/create"}>
-              <Button>Create New Shorts Video</Button>
+              <Button>Create New AI Powered Shorts Video</Button>
             </Link>
           </div>
         )}
