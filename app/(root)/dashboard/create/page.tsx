@@ -73,7 +73,7 @@ const CreatePage = () => {
     getVideoScript();
   };
 
-  // generate audio file
+  // generate audio file from script
   const generateAudioFile = async (script: StoryElements) => {
     let scriptText = "";
     const id = uuidv4();
@@ -104,7 +104,7 @@ const CreatePage = () => {
     }
   };
 
-  // generate audio caption
+  // generate audio caption file
   const generateCaptionFile = async (audioFileURL: string) => {
     try {
       setIsGeneratingCaption(true);
@@ -125,7 +125,7 @@ const CreatePage = () => {
     }
   };
 
-  // generate ai image
+  // generate ai image from script
   const generateImage = async () => {
     setIsGeneratingImage(true);
     const images: string[] = [];
