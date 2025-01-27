@@ -11,6 +11,9 @@ import { v4 as uuidv4 } from "uuid";
 import { LoadingState } from "@/components/custom/Loading";
 import { FormData, StoryElements, VideoData } from "@/types";
 import { videoDataContext } from "@/app/_context/videoDataContext";
+import { db } from "@/config/db";
+import { VideoDataInsert, videoDataSchema } from "@/config/db/schema";
+import { useUser } from "@clerk/nextjs";
 
 const CreatePage = () => {
   const [formData, setFormData] = useState<FormData>({});
@@ -18,11 +21,14 @@ const CreatePage = () => {
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [Loading, setLoading] = useState(false);
   const [videoScript, setVideoScript] = useState<StoryElements>([]);
   const [audioFileURL, setAudioFileURL] = useState("");
   const [captions, setCaptions] = useState("");
   const [imageList, setImageList] = useState<string[]>([]);
   const { videoData, setVideoData } = useContext(videoDataContext);
+
+  const { user } = useUser();
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
     setFormData((prev) => ({
@@ -95,7 +101,7 @@ const CreatePage = () => {
         audioFileURL: res?.data?.result,
       }));
       if (res?.data?.result) {
-        generateCaptionFile(res?.data?.result);
+        generateCaptionFile(res?.data?.result, script);
       }
     } catch (error) {
       console.log(error);
@@ -105,7 +111,10 @@ const CreatePage = () => {
   };
 
   // generate audio caption file
-  const generateCaptionFile = async (audioFileURL: string) => {
+  const generateCaptionFile = async (
+    audioFileURL: string,
+    script: StoryElements
+  ) => {
     try {
       setIsGeneratingCaption(true);
       const res = await axios.post("/api/generate-caption", {
@@ -117,7 +126,7 @@ const CreatePage = () => {
         ...prev,
         captionFile: res?.data?.result,
       }));
-      generateImage();
+      generateImage(script);
     } catch (err) {
       console.log(err);
     } finally {
@@ -126,11 +135,11 @@ const CreatePage = () => {
   };
 
   // generate ai image from script
-  const generateImage = async () => {
+  const generateImage = async (script: StoryElements) => {
     setIsGeneratingImage(true);
     const images: string[] = [];
     try {
-      for (const item of videoScript) {
+      for (const item of script) {
         const res = await axios.post("/api/generate-image", {
           prompt: item?.imagePrompt,
         });
@@ -146,6 +155,43 @@ const CreatePage = () => {
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  useEffect(() => {
+    console.log(videoData);
+    if (Object.keys(videoData).length == 4) {
+      saveVideoData(videoData);
+    }
+  }, [videoData]);
+
+  const saveVideoData = (videoData: VideoData) => {
+    setLoading(true);
+
+    // Validate the data before insert
+    if (
+      !videoData.videoScript ||
+      !videoData.audioFileURL ||
+      !videoData.captionFile
+    ) {
+      throw new Error("Missing required fields");
+    }
+
+    const insertData: VideoDataInsert = {
+      script: videoData.videoScript,
+      audioFileURL: videoData.audioFileURL,
+      captions: videoData.captionFile,
+      imageList: videoData.imageList ?? [],
+      createdBy: user?.primaryEmailAddress?.emailAddress ?? "",
+    };
+
+    const result = db
+      .insert(videoDataSchema)
+      .values(insertData)
+      .returning({ id: videoDataSchema.id })
+      .execute();
+
+    console.log(result);
+    setLoading(false);
   };
 
   return (

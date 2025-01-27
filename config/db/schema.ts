@@ -5,7 +5,7 @@ import {
   varchar,
   boolean,
   timestamp,
-  json,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -18,11 +18,26 @@ export const users = pgTable("users", {
   updatedAt: timestamp().defaultNow(),
 });
 
-export const videoData = pgTable("videoData", {
+// 2. Define proper types for the schema
+export type StoryElement = {
+  imagePrompt: string;
+  contentText: string;
+};
+
+export type VideoDataInsert = {
+  script: StoryElement[];
+  audioFileURL: string;
+  captions: string[];
+  imageList: string[];
+  createdBy: string;
+};
+
+// 3. Update the schema with proper types
+export const videoDataSchema = pgTable("videoDataSchema", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  script: json().notNull(),
-  audioFileURL: varchar().notNull(),
-  captions: json().notNull(),
-  imageList: varchar().array(),
-  createdBy: varchar().notNull()
-})
+  script: jsonb("script").notNull().$type<StoryElement[]>(), 
+  audioFileURL: varchar("audioFileURL").notNull(),
+  captions: jsonb("captions").notNull().$type<string[]>(),
+  imageList: varchar("imageList").array(),
+  createdBy: varchar("createdBy").notNull()
+});
