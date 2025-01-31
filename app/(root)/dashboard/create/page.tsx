@@ -14,6 +14,7 @@ import { videoDataContext } from "@/app/_context/videoDataContext";
 import { db } from "@/config/db";
 import { VideoDataInsert, videoDataSchema } from "@/config/db/schema";
 import { useUser } from "@clerk/nextjs";
+import PlayerDialog from "@/components/custom/PlayerDialog";
 
 const CreatePage = () => {
   const [formData, setFormData] = useState<FormData>({});
@@ -27,6 +28,8 @@ const CreatePage = () => {
   const [captions, setCaptions] = useState("");
   const [imageList, setImageList] = useState<string[]>([]);
   const { videoData, setVideoData } = useContext(videoDataContext);
+  const [playVideo, setPlayVideo] = useState(true);
+  const [videoId, setVideoId] = useState<number | undefined>(1);
 
   const { user } = useUser();
 
@@ -162,9 +165,10 @@ const CreatePage = () => {
     if (Object.keys(videoData).length == 4) {
       saveVideoData(videoData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoData]);
 
-  const saveVideoData = (videoData: VideoData) => {
+  const saveVideoData = async (videoData: VideoData) => {
     setLoading(true);
 
     // Validate the data before insert
@@ -184,14 +188,21 @@ const CreatePage = () => {
       createdBy: user?.primaryEmailAddress?.emailAddress ?? "",
     };
 
-    const result = db
-      .insert(videoDataSchema)
-      .values(insertData)
-      .returning({ id: videoDataSchema.id })
-      .execute();
+    try {
+      const result = await db
+        .insert(videoDataSchema)
+        .values(insertData)
+        .returning({ id: videoDataSchema.id })
+        .execute();
 
-    console.log(result);
-    setLoading(false);
+      setVideoId(result[0]?.id);
+      setPlayVideo(true);
+      console.log(result);
+    } catch (error) {
+      console.error("Error inserting video data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -224,6 +235,7 @@ const CreatePage = () => {
           </Button>
         </div>
       </div>
+      <PlayerDialog playVideo={playVideo} videoId={videoId} />
     </div>
   );
 };
