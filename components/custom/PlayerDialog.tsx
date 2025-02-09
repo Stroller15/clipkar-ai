@@ -14,9 +14,9 @@ import { videoDataSchema } from "@/config/db/schema";
 import { eq } from "drizzle-orm";
 import { VideoData } from "@/types";
 
-const PlayerDialog = ({ playVideo, videoId }) => {
+const PlayerDialog = ({ playVideo, videoId }: { playVideo: boolean, videoId: number }) => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [videoData, setVideoData] = useState<VideoData | null>(null); 
+  const [videoData, setVideoData] = useState<VideoData | null>(null);
 
   const getVideoData = async () => {
     const response = await db
@@ -25,20 +25,21 @@ const PlayerDialog = ({ playVideo, videoId }) => {
       .where(eq(videoDataSchema.id, videoId));
 
     if (response.length > 0) {
-      setVideoData(response[0]);
+      setVideoData(response[0])
     }
-    console.log(response);
+    console.log("response", response);
   };
 
   useEffect(() => {
-    setOpenDialog(playVideo);
+    setOpenDialog(playVideo)
+    videoId && getVideoData();
   }, [playVideo]);
 
   useEffect(() => {
     if (videoId) {
-      getVideoData(); 
+      getVideoData();
     }
-  }, [videoId]); 
+  }, [videoId]);
   return (
     <Dialog open={openDialog}>
       <DialogContent className=" bg-white flex flex-col items-center">
