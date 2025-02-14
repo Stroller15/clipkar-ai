@@ -29,7 +29,7 @@ const CreatePage = () => {
   const [imageList, setImageList] = useState<string[]>([]);
   const { videoData, setVideoData } = useContext(videoDataContext);
   const [playVideo, setPlayVideo] = useState(true);
-  const [videoId, setVideoId] = useState<number | undefined>(2);
+  const [videoId, setVideoId] = useState<number>(2);
 
   const { user } = useUser();
 
