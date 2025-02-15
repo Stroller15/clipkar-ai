@@ -12,7 +12,10 @@ export interface StoryElement {
 export type StoryElements = StoryElement[];
 
 interface Caption {
+  start: number,
   end: number;
+  confidence: number,
+  text: string
 }
 
 export interface VideoData {

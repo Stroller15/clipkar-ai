@@ -23,7 +23,7 @@ const PlayerDialog = ({
   videoId: number;
 }) => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [videoData, setVideoData] = useState<VideoData | undefined>(undefined);
+  const [videoData, setVideoData] = useState<VideoData>();
   const [durationInFrame, setDurationInFrame] = useState<number>(1000);
 
   console.log(videoData);

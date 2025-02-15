@@ -33,11 +33,12 @@ const RemotionVideo = ({
 
   const getCurrentCaptions = () => {
     const currentTime = (frame / 30) * 1000;
-    const currentCaptions: any = captionFile?.find(
+    const currentCaptions = captionFile?.find(
       (word) => currentTime >= word?.start && currentTime <= word.end
     );
     return currentCaptions ? currentCaptions?.text : " ";
   };
+  
   return (
     <AbsoluteFill className="bg-black">
       {imageList?.map((item, index) => (
