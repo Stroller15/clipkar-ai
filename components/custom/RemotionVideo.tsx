@@ -10,6 +10,7 @@ import {
 } from "remotion";
 
 const RemotionVideo = ({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   videoScript,
   imageList,
   audioFileURL,
