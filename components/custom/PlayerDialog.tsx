@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ const PlayerDialog = ({
 }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [videoData, setVideoData] = useState<VideoData | undefined>(undefined);
+  const [durationInFrame, setDurationInFrame] = useState<number>(1000);
 
   console.log(videoData);
 
@@ -32,10 +34,12 @@ const PlayerDialog = ({
       .from(videoDataSchema)
       .where(eq(videoDataSchema.id, videoId));
 
+    console.log({ response });
+
     if (response.length > 0) {
       setVideoData(response[0] as VideoData);
     }
-    console.log("response", response);
+    console.log("response", response[0]);
   };
 
   useEffect(() => {
@@ -60,12 +64,18 @@ const PlayerDialog = ({
           <DialogDescription>
             <Player
               component={RemotionVideo}
-              durationInFrames={120}
+              durationInFrames={Number(durationInFrame.toFixed(0))}
               compositionWidth={300}
               compositionHeight={450}
               fps={30}
+              controls={true}
+              inputProps={{
+                ...videoData,
+                setDurationInFrame: (frameValue: number) =>
+                  setDurationInFrame(frameValue),
+              }}
             />
-            <div className="flex gap-10">
+            <div className="flex gap-10 mt-10">
               <Button>Cancle</Button>
               <Button>Export</Button>
             </div>

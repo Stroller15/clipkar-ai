@@ -11,9 +11,16 @@ export interface StoryElement {
 
 export type StoryElements = StoryElement[];
 
+interface Caption {
+  end: number;
+}
+
 export interface VideoData {
-  videoScript?: StoryElements; 
-  audioFileURL?: string;       
-  captionFile?: string[];       
-  imageList?: string[];        
+  id?: number;
+  videoScript?: StoryElements;
+  audioFileURL?: string;
+  captionFile?: Caption[];
+  imageList?: string[];
+  createdBy?: string;
+  setDurationInFrame?: (frameValue: number) => void;
 }

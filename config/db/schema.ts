@@ -35,9 +35,9 @@ export type VideoDataInsert = {
 // 3. Update the schema with proper types
 export const videoDataSchema = pgTable("videoDataSchema", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  script: jsonb("script").notNull().$type<StoryElement[]>(), 
+  videoScript: jsonb("script").notNull().$type<StoryElement[]>(), 
   audioFileURL: varchar("audioFileURL").notNull(),
-  captions: jsonb("captions").notNull().$type<string[]>(),
+  captionFile: jsonb("captions").notNull().$type<string[]>(),
   imageList: varchar("imageList").array(),
   createdBy: varchar("createdBy").notNull()
 });
