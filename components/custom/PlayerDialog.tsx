@@ -14,6 +14,7 @@ import { db } from "@/config/db";
 import { videoDataSchema } from "@/config/db/schema";
 import { eq } from "drizzle-orm";
 import { VideoData } from "@/types";
+import { useRouter } from "next/navigation";
 
 const PlayerDialog = ({
   playVideo,
@@ -25,6 +26,7 @@ const PlayerDialog = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [videoData, setVideoData] = useState<VideoData>();
   const [durationInFrame, setDurationInFrame] = useState<number>(1000);
+  const router = useRouter();
 
   console.log(videoData);
 
@@ -43,7 +45,7 @@ const PlayerDialog = ({
   };
 
   useEffect(() => {
-    setOpenDialog(playVideo);
+    setOpenDialog(!openDialog);
     if (videoId) {
       getVideoData();
     }
@@ -76,7 +78,7 @@ const PlayerDialog = ({
               }}
             />
             <div className="flex gap-10 mt-10">
-              <Button>Cancle</Button>
+              <Button onClick ={() => {router.replace('/dashboard'); setOpenDialog(false)}}>Cancle</Button>
               <Button>Export</Button>
             </div>
           </DialogDescription>
