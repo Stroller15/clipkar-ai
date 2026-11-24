@@ -1,35 +1,98 @@
-# ClipKar
+<div align="center">
 
-Pick a topic, an art style and a length. ClipKar writes the script (Gemini), records the voiceover (Google Text-to-Speech), times the captions (AssemblyAI), illustrates each scene (Replicate) and plays it back as a 9:16 short (Remotion).
+<img src="public/logo.png" width="64" height="64" alt="Clipkar logo" />
 
-## Setup
+# Clipkar
 
-Requires Node 22 (`nvm use`).
+**Turn a topic into a narrated, captioned short video in about a minute.**
 
-```bash
-npm install
-cp .env.example .env.local   # fill in every key
-npm run db:push              # create the Postgres tables
-npm run dev
+[Live app](https://clipkar.vercel.app/) · [How it works](#how-it-works) · [Run it locally](#run-it-locally)
+
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![React](https://img.shields.io/badge/React-19-149eca?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
+![Remotion](https://img.shields.io/badge/Remotion-4-0b84f3)
+![Gemini](https://img.shields.io/badge/Google-Gemini-4285f4?logo=google&logoColor=white)
+
+</div>
+
+## What it does
+
+Clipkar is an AI shorts generator. Pick a topic, an art style and a length, and it writes a script, illustrates every scene, records a voiceover, times word-level captions to it and plays the finished vertical video in the browser. Every short you make is saved to your dashboard so you can watch it again later.
+
+| Step | You choose |
+| --- | --- |
+| **01 Topic** | Random AI Story, Scary Story, Historical Facts, Bed Time Story, Motivational, Fun Facts, Kids Story, or write your own |
+| **02 Style** | Realistic, Cartoon, Comic, GTA, Imaginary, Watercolor |
+| **03 Duration** | 15, 30, 45 or 60 seconds |
+
+## How it works
+
+```mermaid
+flowchart LR
+    U[Create form] --> S["/api/generate-video-image-script<br/>Gemini writes scenes"]
+    S --> A["/api/generate-audio<br/>Google Cloud TTS"]
+    A --> C["/api/generate-caption<br/>AssemblyAI word timings"]
+    S --> I["/api/generate-image<br/>SDXL Lightning on Replicate"]
+    A & I --> FB[(Firebase Storage)]
+    C & I --> DB["/api/videos<br/>Neon Postgres"]
+    DB --> P[Remotion Player]
 ```
 
-### Services
+1. **Script.** Gemini returns JSON: a list of scenes, each with an `imagePrompt` and the `contentText` to narrate. The prompt includes your topic, style and duration.
+2. **Voiceover.** The narration for all scenes is joined and sent to Google Cloud Text-to-Speech. The MP3 is uploaded to Firebase Storage.
+3. **Captions.** AssemblyAI transcribes that MP3 and returns the start and end time of every word, so captions line up exactly with the voice.
+4. **Images.** Each scene's prompt goes to ByteDance's SDXL Lightning (4-step) model on Replicate at 1024 × 1280. Images are copied into Firebase Storage so the links don't expire.
+5. **Save.** Script, audio URL, captions and image URLs are stored as one row in Postgres, tied to your account.
+6. **Play.** A Remotion composition shows each image for its share of the audio, with the active caption on top, at 30 fps in a 2:3 frame. The video length comes from the last caption's end time.
 
-| Step | Service | Env vars |
-| --- | --- | --- |
-| Auth | Clerk | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` |
-| Database | Neon Postgres | `DATABASE_URL` |
-| Script | Google Gemini | `GEMINI_API_KEY`, optional `GEMINI_MODEL` |
-| Voiceover | Google Cloud Text-to-Speech | `TTS_API_KEY` |
-| Captions | AssemblyAI | `ASSEMBLY_AI_API_KEY` |
-| Images | Replicate | `REPLICATE_API_KEY` |
-| File storage | Firebase Storage (Admin SDK) | `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_STORAGE_BUCKET` |
+The create page shows progress through each stage (script → voiceover → captions → images), with a running count of scenes illustrated.
 
-Replicate, AssemblyAI and Text-to-Speech need billing enabled.
+## Tech stack
 
-### Firebase Storage rules
+| Area | Tools |
+| --- | --- |
+| Framework | Next.js 15 (App Router), React 19, TypeScript |
+| UI | Tailwind CSS, shadcn/ui (Radix), Lucide icons |
+| Video | Remotion 4 and `@remotion/player` |
+| Script | Google Gemini (`@google/generative-ai`) |
+| Voice | Google Cloud Text-to-Speech |
+| Captions | AssemblyAI |
+| Images | Replicate (`bytedance/sdxl-lightning-4step`) |
+| File storage | Firebase Storage via `firebase-admin` |
+| Database | Neon serverless Postgres with Drizzle ORM |
+| Auth | Clerk |
 
-Uploads go through the Admin SDK on the server, and playback uses token download URLs, so clients never need direct access. Lock the bucket down:
+## Run it locally
+
+You need Node.js 22 (see `.nvmrc`; `package.json` accepts 22–24) and accounts with the services above. Most have a free tier.
+
+```bash
+git clone https://github.com/Stroller15/clipkar-ai.git
+cd clipkar-ai
+npm install
+```
+
+Copy the example env file and fill in every key. Each one is explained in [`.env.example`](.env.example):
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Where to get it |
+| --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Clerk dashboard → API keys |
+| `DATABASE_URL` | Neon connection string |
+| `GEMINI_API_KEY` | Google AI Studio. Optional `GEMINI_MODEL` overrides the default model |
+| `TTS_API_KEY` | Google Cloud API key with the Text-to-Speech API enabled |
+| `ASSEMBLY_AI_API_KEY` | AssemblyAI dashboard |
+| `REPLICATE_API_KEY` | Replicate account → API tokens |
+| `FIREBASE_SERVICE_ACCOUNT` | Firebase project settings → Service accounts → Generate new private key (JSON on one line, or base64) |
+| `FIREBASE_STORAGE_BUCKET` | e.g. `your-project.firebasestorage.app` |
+
+Replicate, AssemblyAI and Text-to-Speech need billing enabled. All of these are server-only; only the Clerk publishable key reaches the browser.
+
+Uploads go through the Firebase Admin SDK on the server, so lock your Storage bucket to deny all client access:
 
 ```
 rules_version = '2';
@@ -42,6 +105,50 @@ service firebase.storage {
 }
 ```
 
-## Deploying to Vercel
+Create the database tables, then start the dev server:
 
-Add every variable from `.env.example` under Project → Settings → Environment Variables, then redeploy.
+```bash
+npm run db:push
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000), sign up, and go to **Dashboard → Create**.
+
+### Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` / `npm start` | Production build and server |
+| `npm run lint` | ESLint |
+| `npm run db:push` | Apply the Drizzle schema to the database |
+| `npm run db:generate` | Generate a SQL migration from the schema |
+| `npm run db:studio` | Open Drizzle Studio to browse the data |
+
+## Project structure
+
+```
+app/
+  (auth)/                   Clerk sign-in and sign-up
+  (root)/dashboard/         Video library, create flow, account, plans
+  api/
+    generate-video-image-script/   Gemini script
+    generate-audio/                Text-to-speech → Firebase
+    generate-caption/              AssemblyAI word timings
+    generate-image/                Replicate → Firebase
+    videos/, users/                Postgres reads and writes
+components/
+  custom/                   App shell, video list, player dialog, Remotion composition
+  ui/                       shadcn/ui primitives
+config/                     Gemini, Firebase Admin storage and Drizzle setup
+drizzle/                    SQL migrations
+remotion/                   Remotion root for rendering outside the browser
+middleware.ts               Protects /dashboard and /api with Clerk
+```
+
+## Notes
+
+- All `/dashboard` pages and `/api` routes require a signed-in user. Videos are listed and saved by the account's email, which comes from the session, never from the request body.
+- Paid plans aren't available yet. Everyone is on the free plan.
+- A 60-second short makes several image calls to Replicate, which is the slowest and most expensive step.
+- Deploying to Vercel: add every variable from `.env.example` under Project → Settings → Environment Variables.
