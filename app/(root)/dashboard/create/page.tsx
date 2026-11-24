@@ -8,7 +8,6 @@ import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
 import indentString from "indent-string";
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
 import { FormData, StoryElements, VideoData } from "@/types";
 import { videoDataContext } from "@/app/_context/videoDataContext";
 import PlayerDialog from "@/components/custom/PlayerDialog";
@@ -90,7 +89,7 @@ const CreatePage = () => {
     setStage("voice");
     const scriptText = script.map((item) => item.contentText).join(" ");
     try {
-      const res = await axios.post("/api/generate-audio", { text: scriptText, id: uuidv4() });
+      const res = await axios.post("/api/generate-audio", { text: scriptText });
       const url = res?.data?.result;
       if (!url) throw new Error("No audio URL");
       setVideoData((prev) => ({ ...prev, audioFileURL: url }));

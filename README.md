@@ -59,13 +59,13 @@ The create page shows progress through each stage (script → voiceover → capt
 | Voice | Google Cloud Text-to-Speech |
 | Captions | AssemblyAI |
 | Images | Replicate (`bytedance/sdxl-lightning-4step`) |
-| File storage | Firebase Storage |
+| File storage | Firebase Storage via `firebase-admin` |
 | Database | Neon serverless Postgres with Drizzle ORM |
 | Auth | Clerk |
 
 ## Run it locally
 
-You need Node.js 22 (see `.nvmrc`; `package.json` accepts 20–24) and accounts with the services above. Most have a free tier.
+You need Node.js 22 (see `.nvmrc`; `package.json` accepts 22–24) and accounts with the services above. Most have a free tier.
 
 ```bash
 git clone https://github.com/Stroller15/clipkar-ai.git
@@ -73,30 +73,36 @@ cd clipkar-ai
 npm install
 ```
 
-Create `.env.local`:
+Copy the example env file and fill in every key. Each one is explained in [`.env.example`](.env.example):
 
 ```bash
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
+cp .env.example .env.local
+```
 
-# Neon Postgres
-DATABASE_URL=
+| Variable | Where to get it |
+| --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Clerk dashboard → API keys |
+| `DATABASE_URL` | Neon connection string |
+| `GEMINI_API_KEY` | Google AI Studio. Optional `GEMINI_MODEL` overrides the default model |
+| `TTS_API_KEY` | Google Cloud API key with the Text-to-Speech API enabled |
+| `ASSEMBLY_AI_API_KEY` | AssemblyAI dashboard |
+| `REPLICATE_API_KEY` | Replicate account → API tokens |
+| `FIREBASE_SERVICE_ACCOUNT` | Firebase project settings → Service accounts → Generate new private key (JSON on one line, or base64) |
+| `FIREBASE_STORAGE_BUCKET` | e.g. `your-project.firebasestorage.app` |
 
-# AI services
-NEXT_PUBLIC_GEMINI_API_KEY=
-TTS_API_KEY=              # Google Cloud API key with Text-to-Speech enabled
-ASSEMBLY_AI_API_KEY=
-REPLICATE_API_KEY=
+Replicate, AssemblyAI and Text-to-Speech need billing enabled. All of these are server-only; only the Clerk publishable key reaches the browser.
 
-# Firebase (web app config)
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=
+Uploads go through the Firebase Admin SDK on the server, so lock your Storage bucket to deny all client access:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
 ```
 
 Create the database tables, then start the dev server:
@@ -134,7 +140,7 @@ app/
 components/
   custom/                   App shell, video list, player dialog, Remotion composition
   ui/                       shadcn/ui primitives
-config/                     Gemini, Firebase and Drizzle setup
+config/                     Gemini, Firebase Admin storage and Drizzle setup
 drizzle/                    SQL migrations
 remotion/                   Remotion root for rendering outside the browser
 middleware.ts               Protects /dashboard and /api with Clerk
@@ -145,3 +151,4 @@ middleware.ts               Protects /dashboard and /api with Clerk
 - All `/dashboard` pages and `/api` routes require a signed-in user. Videos are listed and saved by the account's email, which comes from the session, never from the request body.
 - Paid plans aren't available yet. Everyone is on the free plan.
 - A 60-second short makes several image calls to Replicate, which is the slowest and most expensive step.
+- Deploying to Vercel: add every variable from `.env.example` under Project → Settings → Environment Variables.
