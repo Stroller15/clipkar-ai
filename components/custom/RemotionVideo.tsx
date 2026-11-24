@@ -80,13 +80,23 @@ const RemotionVideo = ({
                   color: "white",
                   justifyContent: "center",
                   top: undefined,
-                  border: 50,
-                  height: 150,
+                  bottom: 48,
+                  height: 120,
+                  padding: "0 24px",
                   textAlign: "center",
                   width: "100%",
                 }}
               >
-                <h2 className="text-3xl">{getCurrentCaptions()} </h2>
+                <h2
+                  style={{
+                    fontSize: 30,
+                    fontWeight: 600,
+                    lineHeight: 1.15,
+                    textShadow: "0 2px 12px rgba(0,0,0,0.6)",
+                  }}
+                >
+                  {getCurrentCaptions()}
+                </h2>
               </AbsoluteFill>
             </AbsoluteFill>
           </Sequence>

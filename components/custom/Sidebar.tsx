@@ -1,72 +1,78 @@
 "use client";
-import {
-  Clapperboard,
-  LayoutDashboard,
-  SquarePlus,
-  SquareUser,
-} from "lucide-react";
-import Image from "next/image";
+import { Clapperboard, LayoutGrid, Plus, UserRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import React from "react";
+import { usePathname } from "next/navigation";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { Logo } from "./Brand";
+import { cn } from "@/lib/utils";
 
-const Sidebar = () => {
-  const menuOptions = [
-    {
-      id: 1,
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/dashboard",
-    },
-    {
-      id: 2,
-      name: "Create",
-      icon: Clapperboard,
-      path: "/dashboard/create",
-    },
-    {
-      id: 3,
-      name: "Upgrade",
-      icon: SquarePlus,
-      path: "/dashboard/upgrade",
-    },
-    {
-      id: 4,
-      name: "Account",
-      icon: SquareUser,
-      path: "/dashboard/account",
-    },
-  ];
-  const urlPathName = usePathname();
-  const router = useRouter();
+export const NAV_ITEMS: { name: string; icon: LucideIcon; path: string }[] = [
+  { name: "Your shorts", icon: LayoutGrid, path: "/dashboard" },
+  { name: "Create", icon: Clapperboard, path: "/dashboard/create" },
+  { name: "Plans", icon: Plus, path: "/dashboard/upgrade" },
+  { name: "Account", icon: UserRound, path: "/dashboard/account" },
+];
+
+export const NavList = ({ onNavigate }: { onNavigate?: () => void }) => {
+  const pathname = usePathname();
 
   return (
-    <div className="min-h-screen w-64 text-white bg-primary shadow-md p-5">
-      <div className="grid gap-3">
-        <div className="flex items-center gap-1 mb-5">
-          <Link href="/">
-            <div className="flex items-center gap-1 cursor-pointer">
-              <Image src={"/logo.png"} alt="logo" width={40} height={40} />
-              <h1 className="font-bold text-2xl text-bg">ClipKar</h1>
-            </div>
-          </Link>
-        </div>
-        {menuOptions.map((item, index) => (
-          <div
-            key={index}
-            onClick={() => router.push(item.path)}
-            className={`flex items-center gap-3 p-3 cursor-pointer rounded-md ${
-              urlPathName === item.path
-                ? "bg-white text-black"
-                : "hover:bg-white hover:text-black"
-            }`}
-          >
-            <item.icon className="h-6 w-6" />
-            <span>{item.name}</span>
-          </div>
-        ))}
+    <ul className="space-y-1">
+      {NAV_ITEMS.map((item) => {
+        const active = pathname === item.path;
+        return (
+          <li key={item.path}>
+            <Link
+              href={item.path}
+              onClick={onNavigate}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex h-9 items-center gap-3 rounded-lg px-3 text-[14px] transition-colors",
+                active
+                  ? "bg-raised text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                  : "text-subtle hover:bg-raised/60 hover:text-foreground"
+              )}
+            >
+              <item.icon
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  active ? "text-foreground" : "text-muted-foreground"
+                )}
+                strokeWidth={1.5}
+              />
+              {item.name}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
+const Sidebar = () => {
+  const { user } = useUser();
+
+  return (
+    <aside className="flex h-full w-64 flex-col border-r border-border bg-sidebar px-4 pb-4">
+      <div className="flex h-14 items-center px-3">
+        <Logo />
       </div>
-    </div>
+      <nav className="mt-4" aria-label="Main">
+        <NavList />
+      </nav>
+
+      <div className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2">
+        <UserButton />
+        <div className="min-w-0">
+          <p className="truncate text-[13px] leading-5 text-foreground">
+            {user?.fullName ?? user?.username ?? ""}
+          </p>
+          <p className="truncate text-[12px] leading-4 text-muted-foreground">
+            {user?.primaryEmailAddress?.emailAddress ?? ""}
+          </p>
+        </div>
+      </div>
+    </aside>
   );
 };
 

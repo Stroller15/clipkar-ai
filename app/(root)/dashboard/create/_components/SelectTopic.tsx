@@ -1,109 +1,75 @@
 "use client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { TOPICS } from "@/components/custom/Brand";
+import { Field, chipClass } from "./Field";
+
+const CUSTOM = "Custom Prompt";
+
+export const TOPIC_LABELS: Record<string, string> = {
+  "Random AI Story": "Random story",
+  "Scary Story": "Scary story",
+  "Historical Facts": "Historical facts",
+  "Bed Time Story": "Bedtime story",
+  Motivational: "Motivational",
+  "Fun Facts": "Fun facts",
+  "Kids Story": "Kids story",
+  [CUSTOM]: "Write my own",
+};
 
 interface SelectTopicProps {
   onUserSelect: (type: string, value: string) => void;
 }
 
 const SelectTopic: React.FC<SelectTopicProps> = ({ onUserSelect }) => {
-  const [selectedTopic, setSelectedTopic] = useState<string>("");
-  const [customPrompt, setCustomPrompt] = useState<string>("");
-  const [isTouched, setIsTouched] = useState(false);
-  const [isPromptTouched, setIsPromptTouched] = useState(false);
+  const [selected, setSelected] = useState<string>("");
+  const [customPrompt, setCustomPrompt] = useState("");
 
-  const handleSelect = (value: string) => {
-    setSelectedTopic(value);
-    setIsTouched(true);
-    if (value !== "Custom Prompt") {
-      onUserSelect("selectedTopic", value);
-    }
+  const choose = (value: string) => {
+    setSelected(value);
+    onUserSelect("selectedTopic", value === CUSTOM ? customPrompt : value);
   };
-
-  const handleCustomPromptChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const value = e.target.value;
-    setCustomPrompt(value);
-    setIsPromptTouched(true);
-    onUserSelect("selectedTopic", value);
-  };
-
-  const contentOption: string[] = [
-    "Custom Prompt",
-    "Random AI Story",
-    "Scary Story",
-    "Historical Facts",
-    "Bed Time Story",
-    "Motivational",
-    "Fun Facts",
-    "Kids Story",
-  ];
 
   return (
-    <div>
-      <div className="flex items-baseline gap-2">
-        <h2 className="font-bold text-xl text-primary">Content Type</h2>
-        <span className="text-red-500">*</span>
-      </div>
-      <p className="font-xl text-gray-500">
-        Select content type of your short video!
-      </p>
-      <div className="relative">
-        <Select onValueChange={handleSelect} required>
-          <SelectTrigger
-            className={`w-full p-6 mt-2 text-lg rounded-lg ${
-              isTouched && !selectedTopic
-                ? "border-red-500 border-2"
-                : "border-gray-400"
-            }`}
+    <Field step="01" id="topic" title="Topic" hint="What the short is about">
+      <div role="radiogroup" aria-labelledby="topic" className="flex flex-wrap gap-2">
+        {[...TOPICS, CUSTOM].map((item) => (
+          <button
+            key={item}
+            type="button"
+            role="radio"
+            aria-checked={selected === item}
+            onClick={() => choose(item)}
+            className={chipClass(selected === item)}
           >
-            <SelectValue placeholder="Select content type" />
-          </SelectTrigger>
-          <SelectContent>
-            {contentOption.map((item, index) => (
-              <SelectItem key={index} value={item}>
-                {item}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {isTouched && !selectedTopic && (
-          <p className="mt-2 text-sm text-red-500">
-            Please select a content type
-          </p>
-        )}
+            {TOPIC_LABELS[item] ?? item}
+          </button>
+        ))}
       </div>
 
-      {selectedTopic === "Custom Prompt" && (
+      {selected === CUSTOM && (
         <div className="mt-4">
+          <label htmlFor="custom-prompt" className="sr-only">
+            Your prompt
+          </label>
           <Textarea
-            onChange={handleCustomPromptChange}
-            onBlur={() => setIsPromptTouched(true)}
+            id="custom-prompt"
+            autoFocus
             value={customPrompt}
-            required
-            placeholder="Enter your custom prompt here..."
-            className={`w-full min-h-32 p-4 rounded-lg ${
-              isPromptTouched && !customPrompt
-                ? "border-red-500 border-2"
-                : "border-gray-400"
-            }`}
+            onChange={(e) => {
+              setCustomPrompt(e.target.value);
+              onUserSelect("selectedTopic", e.target.value);
+            }}
+            placeholder="A lighthouse keeper who finds a message in a bottle"
+            className="min-h-28"
+            maxLength={400}
           />
-          {isPromptTouched && !customPrompt && (
-            <p className="mt-2 text-sm text-red-500">
-              Please enter your custom prompt
-            </p>
-          )}
+          <p className="mt-2 text-right font-mono text-[12px] tabular-nums text-muted-foreground">
+            {customPrompt.length}/400
+          </p>
         </div>
       )}
-    </div>
+    </Field>
   );
 };
 

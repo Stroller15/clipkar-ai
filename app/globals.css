@@ -2,63 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
+/*
+ * ClipKar design tokens — "edit bay"
+ * Graphite neutrals for every surface, one caption-yellow accent used sparingly.
+ * Values are HSL triplets so shadcn/ui components keep working.
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 240 2% 8%; /* #141415 page */
+    --sidebar: 240 3% 6%; /* #0f0f10 deepest */
+    --card: 240 4% 10%; /* #19191b card */
+    --raised: 240 3% 14%; /* #232325 active row, input */
+    --foreground: 0 0% 93%; /* #ededed primary text */
+    --subtle: 240 2% 64%; /* #a1a1a6 secondary text */
+    --muted-foreground: 240 2% 53%; /* #85858b muted text, icons */
+
+    --card-foreground: var(--foreground);
+    --popover: var(--card);
+    --popover-foreground: var(--foreground);
+
+    /* Primary action: off-white fill, dark text */
+    --primary: 0 0% 93%;
+    --primary-foreground: 240 2% 8%;
+    --secondary: var(--raised);
+    --secondary-foreground: var(--foreground);
+    --muted: var(--raised);
+    /* shadcn "accent" is the hover surface, not a hue */
+    --accent: var(--raised);
+    --accent-foreground: var(--foreground);
+
+    /* The one hue: burned-in caption yellow */
+    --caption: 46 100% 62%; /* #ffd23f */
+    --caption-foreground: 240 2% 8%;
+
+    --positive: 151 50% 53%; /* #4cc38a */
+    --destructive: 358 75% 59%; /* #e5484d */
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-  }
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+
+    --border: 0 0% 93% / 0.08;
+    --input: 0 0% 93% / 0.1;
+    --ring: 46 100% 62%;
+
+    --radius: 0.625rem; /* 10px controls */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    color-scheme: dark;
   }
 }
 
@@ -66,34 +54,49 @@ body {
   * {
     @apply border-border;
   }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01";
+  }
+  ::selection {
+    background: hsl(var(--caption) / 0.3);
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
+@layer utilities {
+  .ease-out-quint {
+    transition-timing-function: var(--ease);
   }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
-.animate-blob {
-  animation: blob 7s infinite;
+/* One entrance on load: short fade and rise, small stagger */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise 420ms var(--ease) both;
 }
 
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: none;
+  }
 }
