@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Dialog,
   DialogContent,
@@ -9,80 +8,83 @@ import {
 import RemotionVideo from "./RemotionVideo";
 import { Player } from "@remotion/player";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
-import { db } from "@/config/db";
-import { videoDataSchema } from "@/config/db/schema";
-import { eq } from "drizzle-orm";
+import axios from "axios";
 import { VideoData } from "@/types";
-import { useRouter } from "next/navigation";
 
 const PlayerDialog = ({
-  playVideo,
+  open,
   videoId,
+  onOpenChange,
+  title = "Your short",
 }: {
-  playVideo: boolean;
-  videoId: number;
+  open: boolean;
+  videoId?: number;
+  onOpenChange: (open: boolean) => void;
+  title?: string;
 }) => {
-  const [openDialog, setOpenDialog] = useState(false);
   const [videoData, setVideoData] = useState<VideoData>();
   const [durationInFrame, setDurationInFrame] = useState<number>(1000);
-  const router = useRouter();
-
-  console.log(videoData);
-
-  const getVideoData = async () => {
-    const response = await db
-      .select()
-      .from(videoDataSchema)
-      .where(eq(videoDataSchema.id, videoId));
-
-    console.log({ response });
-
-    if (response.length > 0) {
-      setVideoData(response[0] as VideoData);
-    }
-    console.log("response", response[0]);
-  };
 
   useEffect(() => {
-    setOpenDialog(!openDialog);
-    if (videoId) {
-      getVideoData();
-    }
-  }, [playVideo]);
+    if (!open || !videoId) return;
+    let cancelled = false;
+    setVideoData(undefined);
 
-  useEffect(() => {
-    if (videoId) {
-      getVideoData();
-    }
-  }, [videoId]);
+    axios
+      .get<{ result: VideoData }>(`/api/videos/${videoId}`)
+      .then(({ data }) => {
+        if (!cancelled) setVideoData({ ...data.result, imageList: data.result.imageList ?? [] });
+      })
+      .catch((error) => console.error("Failed to load video", error));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, videoId]);
+
+  const seconds = Math.round(durationInFrame / 30);
+
   return (
-    <Dialog open={openDialog}>
-      <DialogContent className=" bg-white flex flex-col items-center">
-        <DialogHeader>
-          <DialogTitle className="text-3xl font-bold my-5">
-            Your AI Short Video is Ready
-          </DialogTitle>
-          <DialogDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[380px] gap-0 p-6">
+        <DialogHeader className="text-left">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className="font-mono text-[12px] tabular-nums">
+            {videoData
+              ? `${videoData.imageList?.length ?? 0} scenes · 0:${String(seconds).padStart(2, "0")}`
+              : "Loading"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4 overflow-hidden rounded-xl border border-border bg-sidebar">
+          {videoData ? (
             <Player
               component={RemotionVideo}
-              durationInFrames={Number(durationInFrame.toFixed(0))}
+              durationInFrames={Math.max(1, Number(durationInFrame.toFixed(0)))}
               compositionWidth={300}
               compositionHeight={450}
               fps={30}
-              controls={true}
+              controls
+              style={{ width: "100%", aspectRatio: "2 / 3" }}
               inputProps={{
                 ...videoData,
-                setDurationInFrame: (frameValue: number) =>
-                  setDurationInFrame(frameValue),
+                setDurationInFrame: (frameValue: number) => setDurationInFrame(frameValue),
               }}
             />
-            <div className="flex gap-10 mt-10">
-              <Button onClick ={() => {router.replace('/dashboard'); setOpenDialog(false)}}>Cancle</Button>
-              <Button>Export</Button>
+          ) : (
+            <div className="grid aspect-[2/3] place-items-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" strokeWidth={1.5} />
             </div>
-          </DialogDescription>
-        </DialogHeader>
+          )}
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            Done
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

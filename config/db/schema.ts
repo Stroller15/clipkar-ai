@@ -7,6 +7,7 @@ import {
   timestamp,
   jsonb,
 } from "drizzle-orm/pg-core";
+import type { Caption } from "@/types";
 
 export const users = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -24,20 +25,14 @@ export type StoryElement = {
   contentText: string;
 };
 
-export type VideoDataInsert = {
-  script: StoryElement[];
-  audioFileURL: string;
-  captions: string[];
-  imageList: string[];
-  createdBy: string;
-};
+export type VideoDataInsert = typeof videoDataSchema.$inferInsert;
 
 // 3. Update the schema with proper types
 export const videoDataSchema = pgTable("videoDataSchema", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   videoScript: jsonb("script").notNull().$type<StoryElement[]>(), 
   audioFileURL: varchar("audioFileURL").notNull(),
-  captionFile: jsonb("captions").notNull().$type<string[]>(),
+  captionFile: jsonb("captions").notNull().$type<Caption[]>(),
   imageList: varchar("imageList").array(),
   createdBy: varchar("createdBy").notNull()
 });

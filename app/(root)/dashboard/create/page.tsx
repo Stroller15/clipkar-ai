@@ -1,55 +1,59 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { useContext, useEffect, useState } from "react";
-import SelectTopic from "./_components/SelectTopic";
+import Image from "next/image";
+import { Check, Circle, Loader2 } from "lucide-react";
+import SelectTopic, { TOPIC_LABELS } from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
 import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
 import indentString from "indent-string";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { LoadingState } from "@/components/custom/Loading";
 import { FormData, StoryElements, VideoData } from "@/types";
 import { videoDataContext } from "@/app/_context/videoDataContext";
-import { db } from "@/config/db";
-import { VideoDataInsert, videoDataSchema } from "@/config/db/schema";
-import { useUser } from "@clerk/nextjs";
 import PlayerDialog from "@/components/custom/PlayerDialog";
+import { PageHeader } from "@/components/custom/PageHeader";
+import { Caption, ShortFrame, STYLES } from "@/components/custom/Brand";
+import { cn } from "@/lib/utils";
+
+type Stage = "script" | "voice" | "captions" | "images" | "saving";
+
+const STAGES: { key: Stage; label: string; running: string }[] = [
+  { key: "script", label: "Script", running: "Writing the script" },
+  { key: "voice", label: "Voiceover", running: "Recording the voiceover" },
+  { key: "captions", label: "Captions", running: "Timing the captions" },
+  { key: "images", label: "Images", running: "Illustrating scenes" },
+];
 
 const CreatePage = () => {
   const [formData, setFormData] = useState<FormData>({});
-  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
-  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [Loading, setLoading] = useState(false);
-  const [videoScript, setVideoScript] = useState<StoryElements>([]);
-  const [audioFileURL, setAudioFileURL] = useState("");
-  const [captions, setCaptions] = useState("");
-  const [imageList, setImageList] = useState<string[]>([]);
+  const [stage, setStage] = useState<Stage | null>(null);
+  const [done, setDone] = useState<Stage[]>([]);
+  const [imageProgress, setImageProgress] = useState<{ done: number; total: number }>();
+  const [error, setError] = useState<string | null>(null);
   const { videoData, setVideoData } = useContext(videoDataContext);
-  const [playVideo, setPlayVideo] = useState(true);
-  const [videoId, setVideoId] = useState<number>(2);
-
-  const { user } = useUser();
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [videoId, setVideoId] = useState<number>();
 
   const onHandleInputChange = (fieldName: string, fieldValue: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: fieldValue,
-    }));
+    setFormData((prev) => ({ ...prev, [fieldName]: fieldValue }));
   };
 
-  const isLoading =
-    isGeneratingScript ||
-    isGeneratingAudio ||
-    isGeneratingCaption ||
-    isGeneratingImage;
+  const isGenerating = stage !== null;
+  const ready = Boolean(
+    formData.selectedTopic?.trim() && formData.selectedStyle && formData.selectedDuration
+  );
+
+  const markDone = (s: Stage) => setDone((prev) => [...prev, s]);
+
+  const fail = (message: string, err: unknown) => {
+    console.error(message, err);
+    setError(message);
+    setStage(null);
+  };
 
   const prompt = indentString(
-    `write a script to generate ${
-      formData.selectedDuration || "30 Seconds"
-    } video topic: interesting ${
+    `write a script to generate ${formData.selectedDuration || "30 Seconds"} video topic: interesting ${
       formData.selectedTopic || "Story"
     } along with AI image prompt in ${
       formData.selectedStyle || "Realistic"
@@ -57,185 +61,236 @@ const CreatePage = () => {
     2
   );
 
-  // generate video and image script
+  // 1. script
   const getVideoScript = async () => {
-    setIsGeneratingScript(true);
+    setStage("script");
     try {
-      const result = await axios.post("/api/generate-video-image-script", {
-        prompt,
-      });
-      const newScript = result?.data?.result?.scenes;
-      setVideoData((prev) => ({
-        ...prev,
-        videoScript: newScript,
-      }));
-      setVideoScript(newScript);
+      const result = await axios.post("/api/generate-video-image-script", { prompt });
+      const newScript: StoryElements = result?.data?.result?.scenes;
+      if (!newScript?.length) throw new Error("Empty script");
+      setVideoData((prev) => ({ ...prev, videoScript: newScript }));
+      markDone("script");
       generateAudioFile(newScript);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsGeneratingScript(false);
+    } catch (err) {
+      fail("Couldn't write the script. Try again.", err);
     }
   };
 
-  const onCreateVideoClickHandler = () => {
+  const onCreate = () => {
+    if (!ready || isGenerating) return;
+    setError(null);
+    setDone([]);
+    setImageProgress(undefined);
+    setVideoData({});
     getVideoScript();
   };
 
-  // generate audio file from script
+  // 2. voiceover
   const generateAudioFile = async (script: StoryElements) => {
-    let scriptText = "";
-    const id = uuidv4();
-
-    script?.forEach((item) => {
-      scriptText += item.contentText + " ";
-    });
-
+    setStage("voice");
+    const scriptText = script.map((item) => item.contentText).join(" ");
     try {
-      setIsGeneratingAudio(true);
-      const res = await axios.post("/api/generate-audio", {
-        text: scriptText,
-        id,
-      });
-
-      setAudioFileURL(res?.data?.result);
-      setVideoData((prev) => ({
-        ...prev,
-        audioFileURL: res?.data?.result,
-      }));
-      if (res?.data?.result) {
-        generateCaptionFile(res?.data?.result, script);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsGeneratingAudio(false);
+      const res = await axios.post("/api/generate-audio", { text: scriptText, id: uuidv4() });
+      const url = res?.data?.result;
+      if (!url) throw new Error("No audio URL");
+      setVideoData((prev) => ({ ...prev, audioFileURL: url }));
+      markDone("voice");
+      generateCaptionFile(url, script);
+    } catch (err) {
+      fail("Couldn't record the voiceover. Try again.", err);
     }
   };
 
-  // generate audio caption file
-  const generateCaptionFile = async (
-    audioFileURL: string,
-    script: StoryElements
-  ) => {
+  // 3. captions
+  const generateCaptionFile = async (audioFileURL: string, script: StoryElements) => {
+    setStage("captions");
     try {
-      setIsGeneratingCaption(true);
-      const res = await axios.post("/api/generate-caption", {
-        audioFileURL,
-      });
-
-      setCaptions(res?.data?.result);
-      setVideoData((prev) => ({
-        ...prev,
-        captionFile: res?.data?.result,
-      }));
+      const res = await axios.post("/api/generate-caption", { audioFileURL });
+      setVideoData((prev) => ({ ...prev, captionFile: res?.data?.result }));
+      markDone("captions");
       generateImage(script);
     } catch (err) {
-      console.log(err);
-    } finally {
-      setIsGeneratingCaption(false);
+      fail("Couldn't time the captions. Try again.", err);
     }
   };
 
-  // generate ai image from script
+  // 4. images
   const generateImage = async (script: StoryElements) => {
-    setIsGeneratingImage(true);
+    setStage("images");
     const images: string[] = [];
+    setImageProgress({ done: 0, total: script.length });
     try {
       for (const item of script) {
-        const res = await axios.post("/api/generate-image", {
-          prompt: item?.imagePrompt,
-        });
+        const res = await axios.post("/api/generate-image", { prompt: item?.imagePrompt });
         images.push(res?.data?.result);
+        setImageProgress({ done: images.length, total: script.length });
       }
-      setVideoData((prev) => ({
-        ...prev,
-        imageList: images,
-      }));
-      setImageList(images);
-    } catch (error) {
-      console.error("Error generating images:", error);
-    } finally {
-      setIsGeneratingImage(false);
+      markDone("images");
+      setStage("saving");
+      setVideoData((prev) => ({ ...prev, imageList: images }));
+    } catch (err) {
+      fail("Couldn't illustrate the scenes. Try again.", err);
     }
   };
 
   useEffect(() => {
-    console.log(videoData);
-    if (Object.keys(videoData).length == 4) {
+    if (Object.keys(videoData).length === 4) {
       saveVideoData(videoData);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoData]);
 
-  const saveVideoData = async (videoData: VideoData) => {
-    setLoading(true);
-
-    // Validate the data before insert
-    if (
-      !videoData.videoScript ||
-      !videoData.audioFileURL ||
-      !videoData.captionFile
-    ) {
-      throw new Error("Missing required fields");
+  const saveVideoData = async (data: VideoData) => {
+    if (!data.videoScript || !data.audioFileURL || !data.captionFile) {
+      fail("Something went missing while generating. Try again.", data);
+      return;
     }
 
-    const insertData: VideoDataInsert = {
-      script: videoData.videoScript,
-      audioFileURL: videoData.audioFileURL,
-      captions: videoData.captionFile,
-      imageList: videoData.imageList ?? [],
-      createdBy: user?.primaryEmailAddress?.emailAddress ?? "",
-    };
-
     try {
-      const result = await db
-        .insert(videoDataSchema)
-        .values(insertData)
-        .returning({ id: videoDataSchema.id })
-        .execute();
-
-      setVideoId(result[0]?.id);
-      setPlayVideo(true);
-      console.log(result);
-    } catch (error) {
-      console.error("Error inserting video data:", error);
-    } finally {
-      setLoading(false);
+      const res = await axios.post<{ result: { id: number } }>("/api/videos", {
+        videoScript: data.videoScript,
+        audioFileURL: data.audioFileURL,
+        captionFile: data.captionFile,
+        imageList: data.imageList ?? [],
+      });
+      setVideoId(res.data.result.id);
+      setPlayerOpen(true);
+      setStage(null);
+    } catch (err) {
+      fail("Couldn't save your short. Try again.", err);
     }
   };
 
-  return (
-    <div className="p-6 md:p-10">
-      <h2 className="font-bold text-center text-primary md:text-4xl">
-        Create New Short Video
-      </h2>
-      <div className="mt-3 shadow-md p-5 md:mt-5 md:shadow-md md:p-10">
-        <SelectTopic onUserSelect={onHandleInputChange} />
-        <SelectStyle onUserSelect={onHandleInputChange} />
-        <SelectDuration onUserSelect={onHandleInputChange} />
+  const style = STYLES.find((s) => s.name === formData.selectedStyle);
+  const captionWords = (formData.selectedTopic?.trim() || "Your short starts here")
+    .split(/\s+/)
+    .slice(0, 8);
 
-        <div className="mt-5 md:mt-10">
-          <Button
-            onClick={onCreateVideoClickHandler}
-            className="w-full text-white p-6 rounded-lg"
-            disabled={isLoading}
-          >
-            {isGeneratingScript ? (
-              <LoadingState type="script" />
-            ) : isGeneratingAudio ? (
-              <LoadingState type="audio" />
-            ) : isGeneratingCaption ? (
-              <LoadingState type="caption" />
-            ) : isGeneratingImage ? (
-              <LoadingState type="image" />
-            ) : (
-              "Create Short Video"
-            )}
-          </Button>
+  const currentStage = STAGES.find((s) => s.key === stage);
+
+  return (
+    <div className="space-y-8">
+      <PageHeader title="New short" description="Three choices, then ClipKar does the rest" />
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 xl:gap-16">
+        {/* Form */}
+        <div className="divide-y divide-border">
+          <SelectTopic onUserSelect={onHandleInputChange} />
+          <SelectStyle onUserSelect={onHandleInputChange} />
+          <SelectDuration onUserSelect={onHandleInputChange} />
         </div>
+
+        {/* Preview + generate */}
+        <aside className="lg:sticky lg:top-8 lg:self-start">
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex gap-4 lg:flex-col">
+              <ShortFrame className="w-[112px] shrink-0 lg:mx-auto lg:w-[200px]">
+                {style && (
+                  <Image
+                    key={style.name}
+                    src={style.image}
+                    alt=""
+                    fill
+                    sizes="200px"
+                    className="animate-in fade-in-0 scale-[1.35] object-cover duration-300"
+                  />
+                )}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute inset-x-2 bottom-6 lg:inset-x-3 lg:bottom-10">
+                  <Caption
+                    words={captionWords}
+                    active={captionWords.length - 1}
+                    className="text-[12px] lg:text-[16px]"
+                  />
+                </div>
+              </ShortFrame>
+
+              <dl className="min-w-0 flex-1 space-y-2 text-[13px]">
+                {[
+                  ["Topic", TOPIC_LABELS[formData.selectedTopic ?? ""] ?? formData.selectedTopic?.trim()],
+                  ["Style", style && ("label" in style ? style.label : style.name)],
+                  ["Length", formData.selectedDuration?.replace(" Seconds", "s")],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex items-baseline justify-between gap-4">
+                    <dt className="text-muted-foreground">{k}</dt>
+                    <dd className={cn("truncate text-right", v ? "text-foreground" : "text-muted-foreground")}>
+                      {v || "—"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {(isGenerating || done.length > 0) && (
+              <ol className="mt-4 space-y-1 border-t border-border pt-4" aria-live="polite">
+                {STAGES.map((s) => {
+                  const isDone = done.includes(s.key);
+                  const isRunning = stage === s.key;
+                  return (
+                    <li
+                      key={s.key}
+                      className={cn(
+                        "flex h-9 items-center gap-2 rounded-lg px-2 text-[13px]",
+                        isRunning && "bg-raised"
+                      )}
+                    >
+                      <span className="grid h-4 w-4 place-items-center">
+                        {isDone ? (
+                          <Check className="h-4 w-4 text-positive" strokeWidth={1.5} />
+                        ) : isRunning ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-caption" strokeWidth={1.5} />
+                        ) : (
+                          <Circle className="h-3 w-3 text-muted-foreground" strokeWidth={1.5} />
+                        )}
+                      </span>
+                      <span className={isRunning ? "text-foreground" : "text-subtle"}>{s.label}</span>
+                      {s.key === "images" && imageProgress && (
+                        <span className="ml-auto font-mono text-[12px] tabular-nums text-muted-foreground">
+                          {imageProgress.done} of {imageProgress.total}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+
+            {error && (
+              <p role="alert" className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                {error}
+              </p>
+            )}
+
+            <Button
+              size="lg"
+              onClick={onCreate}
+              disabled={!ready || isGenerating}
+              className="mt-4 w-full"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  {stage === "saving" ? "Saving" : currentStage?.running}
+                </>
+              ) : (
+                "Generate short"
+              )}
+            </Button>
+            {!ready && !isGenerating && (
+              <p className="mt-2 text-center text-[12px] text-muted-foreground">
+                Choose a topic, style and length to continue
+              </p>
+            )}
+          </div>
+        </aside>
       </div>
-      <PlayerDialog playVideo={playVideo} videoId={videoId} />
+
+      <PlayerDialog
+        open={playerOpen}
+        videoId={videoId}
+        onOpenChange={setPlayerOpen}
+        title="Your short is ready"
+      />
     </div>
   );
 };

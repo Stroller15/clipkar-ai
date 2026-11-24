@@ -5,26 +5,15 @@ import axios from "axios";
 
 const Provider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
-  console.log(user);
 
   useEffect(() => {
-    if (user) {
-      axios
-        .post("/api/users", {
-          email: user.primaryEmailAddress?.emailAddress,
-          name: user.fullName,
-          imageUrl: user.imageUrl,
-        })
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
+    if (!user) return;
+    axios.post("/api/users").catch((error) => {
+        console.error("Failed to sync user", error);
+      });
   }, [user]);
 
-  return <div>{children}</div>;
+  return <>{children}</>;
 };
 
 export default Provider;

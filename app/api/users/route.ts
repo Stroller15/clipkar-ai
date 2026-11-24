@@ -1,29 +1,22 @@
-import { db } from "@/config/db";
+import { getDb } from "@/config/db";
 import { users } from "@/config/db/schema";
-import { eq } from "drizzle-orm";
+import { requireEmail } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-  const { email, name, imageUrl } = await req.json();
-  
-  // Check if user already exists
-  const existingUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .execute();
+// POST /api/users — make sure the signed-in Clerk user has a row.
+// Identity comes from the session, not the request body.
+export async function POST() {
+  const auth = await requireEmail();
+  if ("error" in auth) return auth.error;
 
-  if (existingUser.length === 0) {
-    // Insert new user
-    await db
-      .insert(users)
-      .values({
-        email,
-        name,
-        imageUrl,
-      })
-      .execute();
-  }
+  await getDb()
+    .insert(users)
+    .values({
+      email: auth.email,
+      name: auth.user.fullName ?? auth.user.username ?? auth.email,
+      imageUrl: auth.user.imageUrl,
+    })
+    .onConflictDoNothing({ target: users.email });
 
-  return NextResponse.json({ message: "User registered successfully" }, { status: 200 });
+  return NextResponse.json({ ok: true });
 }

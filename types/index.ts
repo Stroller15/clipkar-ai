@@ -11,7 +11,7 @@ export interface StoryElement {
 
 export type StoryElements = StoryElement[];
 
-interface Caption {
+export interface Caption {
   start: number,
   end: number;
   confidence: number,
